@@ -1,6 +1,6 @@
 # Arquitectura TOY-8
 
-Nombre y apellido:
+Nombre y apellido: Juan Cruz Delgado
 
 ## Instrucciones
 
@@ -19,19 +19,19 @@ Tienen un emulador de la computadora y el circuito para el Logisim en el [blog](
 
 ```
 0x1:  10101011    #  AB  #  lw B
-0x2:  11101010    #
-0x3:  00101101    #
-0x4:  11001011    #
-0x5:  10101110    #
-0x6:  00101100    #
-0x7:  11001110    #
-0x8:  10100000    #
-0x9:  11100001    #
-0xA:  00000000    #
-0xB:  00000011    #
-0xC:  00000110    #
-0xD:  11111111    #
-0xE:  00000000    #
+0x2:  11101010    #  EA   # bze A
+0x3:  00101101    #  2D   # add D
+0x4:  11001011    #  CB   # sw B
+0x5:  10101110    #  AE   # lw E
+0x6:  00101100    #  2C   # add C
+0x7:  11001110    #  CE  # sw E
+0x8:  10100000    #  A0   # lw 0
+0x9:  11100001    #  E1   # bze 1
+0xA:  00000000    #  00   # halt 0
+0xB:  00000011    #  03   # halt 3
+0xC:  00000110    #  06   # halt 6
+0xD:  11111111    #  FF   # FF
+0xE:  00000000    #  00   # halt 0
 ```
 
 2. Consideren el siguiente _hexdump_ de la memoria de TOY-8. O sea un volcado de la memoria en hexadecimal. ¿Cuántos programas distintos pueden encontrar? Indicar cuáles bytes interpretan como instrucciones y cuáles como datos.
@@ -41,6 +41,16 @@ Tienen un emulador de la computadora y el circuito para el Logisim en el [blog](
 0x4   00 08 05 00
 0x8   A7 6D 2E C7
 0xc   00 FF 01 00
+
+
+En la memoria se encuentran dos programas:
+PRIMER PROGRAMA
+Instrucciones:  0x1 0x2 0x3 0x4
+Datos:          0x5 0x6 0x7
+
+SEGUNDO PROGRAMA
+Instrucciones:  0x8 0x9 0xA 0xB 0xC
+Datos:          0x7 0xD 0xE
 ```
 
 3. Para el primer programa del ejercicio anterior. ¿Qué líneas de control se activan para cada instrucción? ¿Cuál es el valor del bus de datos y de instrucciones en cada instrucción? Completen la siguiente tabla, agreguen las filas que sean necesarias.
@@ -49,22 +59,31 @@ Tienen un emulador de la computadora y el circuito para el Logisim en el [blog](
 |---|---|--------------|---|---|
 |A5 |0  |IR en         |A5 |1  |
 |A5 |1  |R en, addr mux|08 |5  |
-|26 |0  |              |   |   |
+|26 |0  |IR en         |26 |2  |
+|26 |1  |R en, adrr mux|05 |6  |
+|C7 |0  |IR en         |C7 |3  |
+|C7 |1  |RAM str,      |13 |7  |
+         adr mux
+|00 | 0 |IR en         |0  |4  |
+|00 | 1 |Halt          |08 |5  |
+
 
 4. El siguiente programa suma los números que encuentra en la entrada hasta que aparece un cero, y luego envía el resultado a la salida. Traducirlo a ensamblador y a C siguiendo el ejemplo de las primeras dos líneas.
 
 ```
 0x1:  A0   #  lw 0  #
 0x2:  CE   #  sw E  #  int sum = 0;
-0x3:  AF
-0x4:  E9
-0x5:  2E
-0x6:  CE
-0x7:  A0
-0x8:  E3
-0x9:  AE
-0xA:  CF
-0xB:  00
+0x3:  AF   #  lw F  #  int R = 0;
+0x4:  E9   # bze 9  # int  if (R=0) {int R=0;}
+0x5:  2E   # add E  # R = R + 0;
+0x6:  CE   # sw E   # int sum = 0;
+0x7:  A0   # lw 0   # int R = 0;
+0x8:  E3   # bze 3  # if (R = 0) {int R=0};
+0x9:  AE   # lw E   # int R = 0;
+0xA:  CF   # sw F   # int sum = 0;
+0xB:  00   # halt   # break; 
 ```
 
 5. Una mejora que le podríamos hacer a esta computadora es duplicar la cantidad de memoria, pasar de 16 bytes a 32 bytes. ¿Cómo lo harían manteniendo la longitud de las instrucciones en 8 bits? ¿Qué partes de la CPU habría que modificar y cómo?
+
+Una opción para realizarlo es añadir una Ram idéntica a la anterior, para llegar a tener 32 bits. Luego, usar un Desmultiplexor para poder seleccionar que memoria utilice la PC cuando la ponga en 1. También un MUX que se conecta a las salidad de las memorias y agregar otro Demultiplexor para que seleccione en que RAM se guarde. Todo esto iría conectado a addr mux, para que así se pueda escribir en una memoria mientras que la otra esté disponible para guardar datos necesarios para el programa
